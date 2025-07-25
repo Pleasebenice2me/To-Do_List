@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&family=Dancing+Script&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <meta charset="UTF-8" />
+    <title>My TO-DO List</title>
+    <style>
+        *, html, body {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ff3388, #ff862a);
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            font-family: 'Quicksand', sans-serif;
+            color: white;
+            overflow-y: auto;
+        }
+
+        .center {
+            width: 100%;
+            max-height: 90vh;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        #toggle-dark-mode {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #ff69b4;
+            cursor: pointer;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 144px;
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 20px 40px;
+            border: 4px dashed #ffffff;
+            border-radius: 20px;
+            display: inline-block;
+            text-shadow: 2px 2px 0 #ff69b4, -2px -2px 0 #ff69b4, 2px -2px 0 #ff69b4, -2px 2px 0 #ff69b4;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        #new-task {
+            font-size: 24px;
+            padding: 10px;
+            width: 60%;
+            border-radius: 5px;
+            border: none;
+            margin-top: 20px;
+            outline: none;
+        }
+
+        #add-task-btn,
+        #clear-all-btn {
+            font-size: 24px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.867);
+            color: rgb(255, 176, 204);
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        #add-task-btn:hover,
+        #clear-all-btn:hover {
+            background-color: white;
+        }
+
+        #progress-container {
+            width: 70%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px auto;
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #ffffffaa;
+            border-radius: 10px;
+            transition: width 0.3s ease-in-out;
+        }
+
+        #tasks-list {
+            list-style: none;
+            margin-top: 30px;
+            padding-left: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+        }
+
+        #tasks-list li {
+            width: 70%;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #tasks-list li span {
+            cursor: pointer;
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        #tasks-list li span.completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .delete-btn {
+            background-color: rgb(255, 176, 204);
+            border: none;
+            color: white;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            margin-left: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        #filter-buttons .filter-btn {
+            font-size: 18px;
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.7);
+            color: #ff69b4;
+            cursor: pointer;
+        }
+
+        #filter-buttons .filter-btn.active {
+            background-color: #ff69b4;
+            color: white;
+        }
+
+        #tasks-list::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        #tasks-list::-webkit-scrollbar-track {
+            background: rgba(255, 176, 204, 0.3);
+            border-radius: 10px;
+        }
+
+        #tasks-list::-webkit-scrollbar-thumb {
+            background-color: rgb(255, 100, 140);
+            border-radius: 10px;
+            border: 3px solid rgba(255, 176, 204, 0.3);
+        }
+
+        #empty-msg.empty-message {
+            font-style: italic;
+            font-size: 22px;
+            text-align: center;
+            width: 100%;
+            color: white;
+            margin-top: 10px;
+        }
+
+        /* 🌙 Mode Nuit */
+        body.dark-mode {
+            width: 100%;
+            height: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #161280, #1e0025);
+            color: white;
+            overflow-y: auto;
+        }
+
+        body.dark-mode h1 {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: #ffffff;
+            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000;
+            color: #f0f0f0;
+        }
+
+        body.dark-mode #new-task,
+        body.dark-mode #add-task-btn,
+        body.dark-mode #clear-all-btn,
+        body.dark-mode .filter-btn,
+        body.dark-mode .delete-btn {
+            background-color: rgba(240, 240, 240, 0.1);
+            color: #fff;
+        }
+
+        body.dark-mode .filter-btn.active {
+            background-color: #333;
+            color: #fff;
+        }
+
+        body.dark-mode #filter-buttons .filter-btn {
+            border: none;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode #filter-buttons .filter-btn:hover {
+            background-color: #555;
+            color: #fff;
+        }
+
+        body.dark-mode #tasks-list li {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        body.dark-mode #empty-msg {
+            color: #ccc;
+        }
+
+        body.dark-mode #progress-container {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode #progress-bar {
+            background-color: #f0f0f0;
+        }
+
+        body.dark-mode #toggle-dark-mode {
+            background-color: #333;
+            color: #fff;
+        }
+        #stars-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            display: none;
+        }
+        body.dark-mode #stars-canvas {
+            display: block;
+        }
+        #clouds-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            display: none;
+        }
+        body:not(.dark-mode) #clouds-canvas {
+            display: block;
+        }
+        #sunrays-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -2; /* Derrière nuages et étoiles */
+            display: block;
+        }
+        body.dark-mode #sunrays-canvas {
+            display: none; /* cache en mode nuit */
+        }
+
+
+    </style>
+</head>
+
+<body>
+    <div class="center">
+        <button id="toggle-dark-mode">🌙 Mode Nuit</button>
+        <h1 id="main-title"><b>🌸TO-DO List🌸</b></h1>
+        <p>Let's be productive</p>
+        <input type="text" id="new-task" placeholder="New task..." />
+        <button id="add-task-btn">Add</button>
+        <button id="clear-all-btn">Clear all</button>
+        <canvas id="stars-canvas"></canvas>
+        <canvas id="clouds-canvas"></canvas>
+        <canvas id="sunrays-canvas"></canvas>
+        <div id="progress-container">
+        <div id="progress-bar"></div>
+        </div>
+
+        <ul id="tasks-list"></ul>
+
+        <div id="filter-buttons" style="margin-top: 20px;">
+            <button class="filter-btn active" data-filter="all">Toutes</button>
+            <button class="filter-btn" data-filter="active">À faire</button>
+            <button class="filter-btn" data-filter="completed">Complétées</button>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('new-task');
+        const addBtn = document.getElementById('add-task-btn');
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        const tasksList = document.getElementById('tasks-list');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const darkModeBtn = document.getElementById('toggle-dark-mode');    let currentFilter = 'all';
+    let darkMode = false;
+
+    function updateEmptyMessage() {
+        const existingMsg = document.getElementById('empty-msg');
+        const tasksCount = Array.from(tasksList.children).filter(li => li.id !== 'empty-msg').length;
+        if (tasksCount === 0) {
+            if (!existingMsg) {
+                const msg = document.createElement('div');
+                msg.textContent = "🌻 Rien à faire ! Profite de ta journée 🌻";
+                msg.id = 'empty-msg';
+                msg.className = 'empty-message';
+                tasksList.appendChild(msg);
+            }
+        } else if (existingMsg) {
+            existingMsg.remove();
+        }
+    }
+
+    function launchConfetti() {
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+    }
+
+    function Encouragement() {
+        const tasks = Array.from(tasksList.children).filter(li => li.id !== 'empty-msg');
+        const totalTasks = tasks.length;
+        const completedTasks = tasks.filter(li => li.querySelector('span').classList.contains('completed')).length;
+
+        updateProgressBar(totalTasks, completedTasks);
+
+        if (totalTasks > 0 && totalTasks === completedTasks) {
+            alert("🎉 Bravo, tu as terminé toutes tes tâches ! Super boulot ! 💪");
+            launchConfetti();
+        }
+    }
+
+    function updateProgressBar(total, completed) {
+        if (total === 0) {
+            progressBar.style.width = '0%';
+        } else {
+            const percent = (completed / total) * 100;
+            progressBar.style.width = percent + '%';
+        }
+    }
+
+    function addTask() {
+        const taskText = input.value.trim();
+        if (taskText === '') {
+            alert("Faut entrer une tâche ma belle 🌺");
+            return;
+        }
+
+        const li = document.createElement('li');
+        const taskSpan = document.createElement('span');
+        taskSpan.textContent = taskText;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = '×';
+        deleteBtn.className = 'delete-btn';
+
+        taskSpan.addEventListener('click', () => {
+            taskSpan.classList.toggle('completed');
+            Encouragement();
+            updateEmptyMessage();
+            applyCurrentFilter();
+        });
+
+        deleteBtn.addEventListener('click', () => {
+            tasksList.removeChild(li);
+            Encouragement();
+            updateEmptyMessage();
+            applyCurrentFilter();
+        });
+
+        li.appendChild(taskSpan);
+        li.appendChild(deleteBtn);
+        tasksList.appendChild(li);
+        input.value = '';
+
+        updateEmptyMessage();
+        applyCurrentFilter();
+        Encouragement();
+    }
+
+    function applyCurrentFilter() {
+        const items = tasksList.querySelectorAll('li');
+        items.forEach(item => {
+            if (item.id === 'empty-msg') return;
+            const isCompleted = item.querySelector('span').classList.contains('completed');
+            if (currentFilter === 'all') {
+                item.style.display = 'flex';
+            } else if (currentFilter === 'active') {
+                item.style.display = isCompleted ? 'none' : 'flex';
+            } else if (currentFilter === 'completed') {
+                item.style.display = isCompleted ? 'flex' : 'none';
+            }
+        });
+    }
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.dataset.filter;
+            applyCurrentFilter();
+        });
+    });
+
+    addBtn.addEventListener('click', addTask);
+
+    input.addEventListener('keypress', e => {
+        if (e.key === 'Enter') addTask();
+    });
+
+    clearAllBtn.addEventListener('click', () => {
+        if (confirm("Es-tu sûr(e) de vouloir tout supprimer ?")) {
+            tasksList.innerHTML = '';
+            updateEmptyMessage();
+            applyCurrentFilter();
+            Encouragement();
+        }
+    });
+
+    // Dark mode toggle
+    const title = document.getElementById('main-title');
+
+    const canvas = document.getElementById('stars-canvas');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+
+    function initStars() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        stars = [];
+
+        for (let i = 0; i < 100; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 1.5,
+                velocity: Math.random() * 0.5 + 0.2
+            });
+        }
+    }
+
+    function animateStars() {
+        if (!darkMode) return;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#ffffff";
+
+        for (let star of stars) {
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+            ctx.fill();
+            star.y += star.velocity;
+
+            if (star.y > canvas.height) {
+                star.y = 0;
+                star.x = Math.random() * canvas.width;
+            }
+        }
+
+        requestAnimationFrame(animateStars);
+    }
+
+    const cloudsCanvas = document.getElementById('clouds-canvas');
+    const cloudsCtx = cloudsCanvas.getContext('2d');
+
+    const cloudImage = new Image();
+    cloudImage.src = 'https://pngimg.com/uploads/cloud/cloud_PNG9.png';
+
+    let clouds = [];
+
+    function initClouds() {
+        cloudsCanvas.width = window.innerWidth;
+        cloudsCanvas.height = window.innerHeight;
+        clouds = [];
+
+        const numberOfClouds = 7;
+
+        for (let i = 0; i < numberOfClouds; i++) {
+            const size = Math.random() * 150 + 150;
+            clouds.push({
+                x: Math.random() * cloudsCanvas.width,
+                y: Math.random() * (cloudsCanvas.height * 0.4),
+                speed: Math.random() * 0.3 + 0.05,
+                size: size
+            });
+        }
+    }
+
+    function animateClouds() {
+        if (darkMode) return;
+
+        cloudsCtx.clearRect(0, 0, cloudsCanvas.width, cloudsCanvas.height);
+
+        for (let cloud of clouds) {
+            cloudsCtx.filter = 'brightness(200%)'; // rend plus lumineux
+            cloudsCtx.globalAlpha = cloud.opacity;  // opacité forte
+            cloudsCtx.drawImage(cloudImage, cloud.x, cloud.y, cloud.size, cloud.size * 0.6);
+            cloudsCtx.filter = 'none';          
+            cloud.x += cloud.speed;
+
+            if (cloud.x > cloudsCanvas.width) {
+                cloud.x = -cloud.size;
+                cloud.y = Math.random() * (cloudsCanvas.height * 0.4);
+            }
+        }
+
+        cloudsCtx.globalAlpha = 1;
+        requestAnimationFrame(animateClouds);
+    }
+    const sunraysCanvas = document.getElementById('sunrays-canvas');
+    const sunraysCtx = sunraysCanvas.getContext('2d');
+
+    function resizeSunrays() {
+        sunraysCanvas.width = window.innerWidth;
+        sunraysCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeSunrays);
+    resizeSunrays();
+
+    let sunraysAngle = 0;
+
+    function drawSunrays() {
+        if (darkMode) {
+            sunraysCtx.clearRect(0, 0, sunraysCanvas.width, sunraysCanvas.height);
+            return; // Pas de rayons en mode nuit
+        }
+
+        sunraysCtx.clearRect(0, 0, sunraysCanvas.width, sunraysCanvas.height);
+        const centerX = sunraysCanvas.width + 300; 
+        const centerY = sunraysCanvas.height / 2; 
+        const rayLength = 2000;
+        const rayCount = 16; 
+        sunraysCtx.save();
+        sunraysCtx.translate(centerX, centerY);
+        sunraysCtx.rotate(sunraysAngle);
+
+        for (let i = 0; i < rayCount; i++) {
+            sunraysCtx.beginPath();
+            sunraysCtx.moveTo(0, 0);
+            sunraysCtx.lineTo(rayLength, 0);
+            sunraysCtx.strokeStyle = `rgba(255, 255, 180, 0.3)`; 
+            sunraysCtx.lineWidth = 50;
+            sunraysCtx.shadowColor = 'rgba(255, 255, 200, 0.7)';
+            sunraysCtx.shadowBlur = 50;
+            sunraysCtx.stroke();
+            sunraysCtx.rotate((2 * Math.PI) / rayCount);
+        }
+
+        sunraysCtx.restore();
+
+        sunraysAngle += 0.001; 
+
+        requestAnimationFrame(drawSunrays);
+    }
+
+    function startSunraysAnimation() {
+        drawSunrays();
+    }
+
+    if (!darkMode) {
+        startSunraysAnimation();
+    } else {
+        sunraysCtx.clearRect(0, 0, sunraysCanvas.width, sunraysCanvas.height);
+    }
+
+
+
+    window.addEventListener('resize', initStars);
+    window.addEventListener('resize', initClouds);
+
+    function updateModeVisuals() {
+        document.body.classList.toggle('dark-mode', darkMode);
+        darkModeBtn.textContent = darkMode ? '☀️ Mode Jour' : '🌙 Mode Nuit';
+        title.innerHTML = darkMode ? '<b>🌙 TO-DO List 🌙</b>' : '<b>🌸 TO-DO List 🌸</b>';
+
+        const emptyMsg = document.getElementById('empty-msg');
+        if (emptyMsg) {
+            emptyMsg.textContent = darkMode 
+                ? "🌌 Rien à faire ! Profite de ta soirée 🌌"
+                : "🌻 Rien à faire ! Profite de ta journée 🌻";
+        }
+
+        if (darkMode) {
+            initStars();
+            animateStars();
+            sunraysCtx.clearRect(0, 0, sunraysCanvas.width, sunraysCanvas.height);
+        } else {
+            initClouds();
+            animateClouds();
+            startSunraysAnimation();
+        }
+    }
+
+
+    darkModeBtn.addEventListener('click', () => {
+        darkMode = !darkMode;
+        updateModeVisuals();
+    });
+
+
+    updateEmptyMessage();
+    applyCurrentFilter();
+    Encouragement();
+    updateModeVisuals()
+</script>
+</body>
+</html>
